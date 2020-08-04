@@ -39,11 +39,13 @@
             <div class="col" th:text="${inputMap.getKey()}">
                 商品(大)
             </div>
-            <div class="col" th:text="${inputMap.getValue()}">
+            <div class="col" th:text="${inputMap.getValue().get(0)}">
                 0.90
             </div>
             <div class="col">
-                <input type="text" name="id[0001]" value="0" />
+                <input type="hidden" name="item" th:value="${inputMap.getKey()}">
+                <input type="hidden" name="size" th:value="${inputMap.getValue().get(0)}">
+                <input type="text" name="inputData" th:id="'id[' + ${inputMap.getValue().get(1)} + ']'" value="0" />
             </div>
         </div>
 <!--
