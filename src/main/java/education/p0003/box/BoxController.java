@@ -62,7 +62,7 @@ public class BoxController {
         boxSession.inputSessionMap = new TreeMap<>();
 
         /*
-            引数より取得したデータを配列に保存する。
+            input画面より受け取った引数より取得したデータを配列に保存する。
          */
         String[] arrayData = getDispData.toArray(new String[getDispData.size()]);
         String[] arrayItem = getDispItem.toArray(new String[getDispItem.size()]);
@@ -70,15 +70,17 @@ public class BoxController {
 
         Integer countLoop1;
         Integer countLoop2;
+        Integer countData;
         Map<Integer, String> calcItem = new HashMap<>();
         Map<Integer, Double> calcSize = new HashMap<>();
         Map<Integer, Integer> calcFlag = new HashMap<>();
-        Integer countData = 0;
+        Map<Integer, CalculationInformation> calcInfo = new HashMap<>();      // Simplification
 
         /*
             Item,Size,FlagのMap領域を作成し、値の設定を行う。
             この時同時に処理するデータの件数を取得する。
          */
+        countData = 0;
         for (countLoop1 = 0; countLoop1 < arrayData.length; countLoop1++){
             if (arrayData[countLoop1].equals("0")) {
             } else {
@@ -86,10 +88,25 @@ public class BoxController {
                     calcItem.put(countData, arrayItem[countLoop1]);
                     calcSize.put(countData, Double.parseDouble(arraySize[countLoop1]));
                     calcFlag.put(countData, 0);
+                    /* Start Simplification */
+                    CalculationInformation workCalcInfo = new CalculationInformation();
+                    workCalcInfo.item = arrayItem[countLoop1];
+                    workCalcInfo.size = Double.parseDouble(arraySize[countLoop1]);
+                    workCalcInfo.flag = 0;
+                    calcInfo.put(countData, workCalcInfo);
+                    /* End Simplification */
                     countData++;
                 }
             }
         }
+
+        Set<Integer> keys = calcInfo.keySet();
+        System.out.println(keys.size());
+        System.out.println(keys);
+
+        Collection<CalculationInformation> values = calcInfo.values();
+        System.out.println(values.size());
+        System.out.println(values);
 
         Double calcResult;
         Double calcResultBackup;
@@ -101,6 +118,7 @@ public class BoxController {
         for (countLoop1 = 1; countLoop1 < countData; countLoop1++){
             calcResult = 0.0;
             for (countLoop2 = countData - 1; countLoop2 >= 0; countLoop2--){
+
                 if (calcFlag.get(countLoop2) == 0) {
                     calcResultBackup = calcResult;
                     calcResult += calcSize.get(countLoop2);
@@ -112,6 +130,21 @@ public class BoxController {
                         calcResult = calcResultBackup;
                     }
                 }
+
+                /* Start Simplification
+                if (calcInfo.get(countLoop2).flag == 0) {
+                    calcResultBackup = calcResult;
+                    calcResult += calcInfo.get(countLoop2).size;
+                    if (calcResult <= 1.0) {
+//                        calcInfo.put(countLoop2, flag(countLoop1);
+                        maxCount = countLoop1;
+                        if (calcResult == 1.0) break;
+                    } else {
+                        calcResult = calcResultBackup;
+                    }
+                }
+                 End Simplification */
+
             }
         }
 
@@ -174,4 +207,14 @@ public class BoxController {
     static public class ResultPage {
         Map<Integer, String> resultMap;
     }
+
+    /* Start Simplification */
+    @Getter
+    @Setter
+    static public class CalculationInformation {
+        String item;
+        Double size;
+        Integer flag;
+    }
+    /* End Simplification */
 }
