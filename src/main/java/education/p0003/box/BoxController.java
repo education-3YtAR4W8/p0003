@@ -27,19 +27,19 @@ public class BoxController {
         // item_tblの内容をname順に表示してください。
         InputPage page = new InputPage();
 
-        // item取得
+
+        /*
+            item取得
+         */
         List<Item> itemList = itemDao.selectAll();
 
+        /*
+            View用データの作成
+         */
         page.inputMap = new TreeMap<>();
         for (Item item : itemList) {
-//            page.inputMap.put(item.getName(), item.getSize());
-//            System.out.println(String.format("%04d",Integer.valueOf(item.getId()).intValue()));
             page.inputMap.put(item.getName(), Arrays.asList(item.getSize(), String.format("%04d",Integer.valueOf(item.getId()).intValue())));
-//            page.idMap.put(item.getName(), item.getId());
-//            inputSessionMap.put(item.getName(), item.getSize());
         }
-
-//        System.out.println(page.inputMap.getKey());
 
         model.addAttribute("page", page);
         return "input";
@@ -58,66 +58,35 @@ public class BoxController {
 
         boxSession.temp = 100; // セッションに100を保存
 
+
         boxSession.inputSessionMap = new TreeMap<>();
-        for (String inData : getDispData) {
-            System.out.println(inData);
-        }
-        for (String inItem : getDispItem) {
-            System.out.println(inItem);
-        }
-        for (String inSize : getDispSize) {
-            System.out.println(inSize);
-        }
-
-        String[] arrayData = getDispData.toArray(new String[getDispData.size()]);
-        System.out.println("List = " + getDispData);
-        System.out.println("配列 = " + Arrays.toString(arrayData));
-        String[] arrayItem = getDispItem.toArray(new String[getDispItem.size()]);
-        System.out.println("List = " + getDispItem);
-        System.out.println("配列 = " + Arrays.toString(arrayItem));
-        String[] arraySize = getDispSize.toArray(new String[getDispSize.size()]);
-        System.out.println("List = " + getDispSize);
-        System.out.println("配列 = " + Arrays.toString(arraySize));
-
-        Integer loopCount1, loopCount2;
-        Integer maxNumber;
-        maxNumber = 0;
-        for (loopCount1 = 0; loopCount1 < arrayData.length; loopCount1++){
-            maxNumber += Integer.valueOf(arrayData[loopCount1]);
-        }
 
         /*
-        List<CalcInfo> calcInfo = new ArrayList<>();
-        Double sizeNumber[] = new Double[100];
-        Integer numberCount = 0;
-        for (i = 0; i < arrayData.length; i++){
-            if (arrayData[i].equals("0")) {
+            引数より取得したデータを配列に保存する。
+         */
+        String[] arrayData = getDispData.toArray(new String[getDispData.size()]);
+        String[] arrayItem = getDispItem.toArray(new String[getDispItem.size()]);
+        String[] arraySize = getDispSize.toArray(new String[getDispSize.size()]);
 
-            } else {
-                for (j = 0; j < Integer.valueOf(arrayData[i]); j++){
-                    sizeNumber[numberCount] = Double.parseDouble(arraySize[i]);
-                    Double workSize = new Double(sizeNumber[numberCount]);
-                    String workItem = new String(arrayItem[i]);
-                    calcInfo.add(workItem, workSize);
-                    numberCount++;
-                }
-            }
-        }
-        */
-
+        Integer countLoop1;
+        Integer countLoop2;
         Map<Integer, String> calcItem = new HashMap<>();
         Map<Integer, Double> calcSize = new HashMap<>();
         Map<Integer, Integer> calcFlag = new HashMap<>();
-        Integer dataCount = 0;
-        for (loopCount1 = 0; loopCount1 < arrayData.length; loopCount1++){
-            if (arrayData[loopCount1].equals("0")) {
+        Integer countData = 0;
 
+        /*
+            Item,Size,FlagのMap領域を作成し、値の設定を行う。
+            この時同時に処理するデータの件数を取得する。
+         */
+        for (countLoop1 = 0; countLoop1 < arrayData.length; countLoop1++){
+            if (arrayData[countLoop1].equals("0")) {
             } else {
-                for (loopCount2 = 0; loopCount2 < Integer.valueOf(arrayData[loopCount1]); loopCount2++){
-                    calcItem.put(dataCount, arrayItem[loopCount1]);
-                    calcSize.put(dataCount, Double.parseDouble(arraySize[loopCount1]));
-                    calcFlag.put(dataCount, 0);
-                    dataCount++;
+                for (countLoop2 = 0; countLoop2 < Integer.valueOf(arrayData[countLoop1]); countLoop2++){
+                    calcItem.put(countData, arrayItem[countLoop1]);
+                    calcSize.put(countData, Double.parseDouble(arraySize[countLoop1]));
+                    calcFlag.put(countData, 0);
+                    countData++;
                 }
             }
         }
@@ -125,20 +94,21 @@ public class BoxController {
         Double calcResult;
         Double calcResultBackup;
         Integer maxCount = 0;
-        for (loopCount1 = 1; loopCount1 < dataCount; loopCount1++){
+
+        /*
+            サイズの合計が1.0以下になるデータを取得する。
+         */
+        for (countLoop1 = 1; countLoop1 < countData; countLoop1++){
             calcResult = 0.0;
-            for (loopCount2 = dataCount - 1; loopCount2 >= 0; loopCount2--){
-                if (calcFlag.get(loopCount2) == 0) {
+            for (countLoop2 = countData - 1; countLoop2 >= 0; countLoop2--){
+                if (calcFlag.get(countLoop2) == 0) {
                     calcResultBackup = calcResult;
-                    calcResult += calcSize.get(loopCount2);
+                    calcResult += calcSize.get(countLoop2);
                     if (calcResult <= 1.0) {
-                        calcFlag.put(loopCount2, loopCount1);
-                        maxCount = loopCount1;
-                        if (calcResult == 1.0) {
-                            break;
-                        }
+                        calcFlag.put(countLoop2, countLoop1);
+                        maxCount = countLoop1;
+                        if (calcResult == 1.0) break;
                     } else {
-//                        calcResult -= calcSize.get(loopCount2);   //誤差が生じたため
                         calcResult = calcResultBackup;
                     }
                 }
@@ -150,30 +120,33 @@ public class BoxController {
         String workItem;
         Map<Integer, String> aggregateResult = new HashMap<>();
         Map<String, Integer> workItemCount = new TreeMap<>();
-        for (loopCount1 = 1; loopCount1 <= maxCount; loopCount1++){
+        /*
+            同一の箱でのItem毎の件数を抽出する。
+            その後、出力用データを作成する。
+         */
+        for (countLoop1 = 1; countLoop1 <= maxCount; countLoop1++){
             workItem = "";
-            for (loopCount2 = 0; loopCount2 < dataCount; loopCount2++){
-                if (calcFlag.get(loopCount2) == loopCount1) {
-                    if (workItemCount.get(String.format("%02d", loopCount1) + calcItem.get(loopCount2)) == null) {
-                        workItemCount.put(String.format("%02d", loopCount1) + calcItem.get(loopCount2), 1);
+            for (countLoop2 = 0; countLoop2 < countData; countLoop2++){
+                if (calcFlag.get(countLoop2) == countLoop1) {
+                    if (workItemCount.get(String.format("%02d", countLoop1) + calcItem.get(countLoop2)) == null) {
+                        workItemCount.put(String.format("%02d", countLoop1) + calcItem.get(countLoop2), 1);
                     } else {
-                        workItemCount.put(String.format("%02d", loopCount1) + calcItem.get(loopCount2), workItemCount.get(String.format("%02d", loopCount1) + calcItem.get(loopCount2)) + 1);
+                        workItemCount.put(String.format("%02d", countLoop1) + calcItem.get(countLoop2), workItemCount.get(String.format("%02d", countLoop1) + calcItem.get(countLoop2)) + 1);
                     }
                 }
             }
             workItem = "";
             for (String key : workItemCount.keySet()) {
-                if (key.substring(0,2).equals(String.format("%02d", loopCount1))) {
-                    System.out.println(key + loopCount1);
+                if (key.substring(0,2).equals(String.format("%02d", countLoop1))) {
                     workItem += key.substring(2) + ":" + workItemCount.get(key) + ", ";
                 }
             }
-            aggregateResult.put(loopCount1, workItem.substring(0, workItem.length() - 2));
+            aggregateResult.put(countLoop1, workItem.substring(0, workItem.length() - 2));
         }
 
-        boxSession.inputSessionMap = aggregateResult;
+        System.out.println("aggregateResult : " + aggregateResult);
 
-//        System.out.println(inputSessionMap.inputMap);
+        boxSession.inputSessionMap = aggregateResult;
 
         return "redirect:/box/result/";
     }
@@ -193,10 +166,7 @@ public class BoxController {
     @Getter
     @Setter
     static public class InputPage {
-//        Map<String, String> inputMap;
         Map<String, List> inputMap;
-//        Map<String, Integer> idMap;
-//        Map<String, Boolean> flagMap;
     }
 
     @Getter
@@ -204,13 +174,4 @@ public class BoxController {
     static public class ResultPage {
         Map<Integer, String> resultMap;
     }
-
-/*
-    @Getter
-    @Setter
-    static public class CalcInfo {
-        private String item;
-        private Double size;
-    }
-*/
 }
