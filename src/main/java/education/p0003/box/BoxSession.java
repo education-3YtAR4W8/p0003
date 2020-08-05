@@ -13,7 +13,7 @@ import java.util.Map;
 public class BoxSession implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    Map<String, String> inputSessionMap;
+    Map<Integer, String> inputSessionMap;
 
     Integer temp = 0;
 }

@@ -30,30 +30,42 @@
             商品
         </div>
     </div>
-    <div class="row">
-        <div class="col">
+    <div class="row" th:each="resultMap : ${page.resultMap}">
+        <div class="col" th:text="${resultMap.getKey()}">
             1
         </div>
-        <div class="col">
+        <div class="col" th:text="${resultMap.getValue()}">
             商品(大):1, 商品(小):1
         </div>
     </div>
-    <div class="row">
-        <div class="col">
-            2
+
+    <!--
+        <div class="row">
+            <div class="col">
+                91
+            </div>
+            <div class="col">
+                商品(大):1, 商品(小):1
+            </div>
         </div>
-        <div class="col">
-            商品(中):3, 商品(小):1
+        <div class="row">
+            <div class="col">
+                92
+            </div>
+            <div class="col">
+                商品(中):3, 商品(小):1
+            </div>
         </div>
-    </div>
-    <div class="row">
-        <div class="col">
-            3
+        <div class="row">
+            <div class="col">
+                93
+            </div>
+            <div class="col">
+                商品(中):1, 商品(小):2
+            </div>
         </div>
-        <div class="col">
-            商品(中):1, 商品(小):2
-        </div>
-    </div>
+    -->
+
 </div>
 </body>
 </html>
