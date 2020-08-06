@@ -71,12 +71,7 @@ public class BoxController {
         Integer countLoop1;
         Integer countLoop2;
         Integer countData;
-/* Start Delete for Simplification
-        Map<Integer, String> calcItem = new HashMap<>();
-        Map<Integer, Double> calcSize = new HashMap<>();
-        Map<Integer, Integer> calcFlag = new HashMap<>();
-   End Delete for Simplification */
-        Map<Integer, CalculationInformation> calcInfo = new HashMap<>();      // Add for Simplification
+        Map<Integer, CalculationInformation> calcInfo = new HashMap<>();
 
         /*
             Item,Size,FlagのMap領域を作成し、値の設定を行う。
@@ -87,18 +82,11 @@ public class BoxController {
             if (arrayData[countLoop1].equals("0")) {
             } else {
                 for (countLoop2 = 0; countLoop2 < Integer.valueOf(arrayData[countLoop1]); countLoop2++){
-/* Start Delete for Simplification
-                    calcItem.put(countData, arrayItem[countLoop1]);
-                    calcSize.put(countData, Double.parseDouble(arraySize[countLoop1]));
-                    calcFlag.put(countData, 0);
-   End Delete for Simplification */
-/* Start Add Simplification */
                     CalculationInformation workCalcInfo = new CalculationInformation();
                     workCalcInfo.item = arrayItem[countLoop1];
                     workCalcInfo.size = Double.parseDouble(arraySize[countLoop1]);
                     workCalcInfo.flag = 0;
                     calcInfo.put(countData, workCalcInfo);
-/* End Add Simplification */
                     countData++;
                 }
             }
@@ -122,20 +110,6 @@ public class BoxController {
         for (countLoop1 = 1; countLoop1 < countData; countLoop1++){
             calcResult = 0.0;
             for (countLoop2 = countData - 1; countLoop2 >= 0; countLoop2--){
-/* Start Delete for Simplification
-                if (calcFlag.get(countLoop2) == 0) {
-                    calcResultBackup = calcResult;
-                    calcResult += calcSize.get(countLoop2);
-                    if (calcResult <= 1.0) {
-                        calcFlag.put(countLoop2, countLoop1);
-                        maxCount = countLoop1;
-                        if (calcResult == 1.0) break;
-                    } else {
-                        calcResult = calcResultBackup;
-                    }
-                }
-   End Delete for Simplification */
-/* Start Add Simplification */
                 CalculationInformation workCalcInfo;
                 if (calcInfo.get(countLoop2).flag == 0) {
                     calcResultBackup = calcResult;
@@ -149,12 +123,8 @@ public class BoxController {
                         calcResult = calcResultBackup;
                     }
                 }
-/* End Add Simplification */
-
             }
         }
-
-//        System.out.println("calcFlag : " + calcFlag);     // Delete for Simplification
 
         String workItem;
         Map<Integer, String> aggregateResult = new HashMap<>();
@@ -164,19 +134,7 @@ public class BoxController {
             その後、出力用データを作成する。
          */
         for (countLoop1 = 1; countLoop1 <= maxCount; countLoop1++){
-            workItem = "";
             for (countLoop2 = 0; countLoop2 < countData; countLoop2++){
-/* Start Delete for Simplification
-                if (calcFlag.get(countLoop2) == countLoop1) {
-                    if (workItemCount.get(String.format("%02d", countLoop1) + calcItem.get(countLoop2)) == null) {
-                        workItemCount.put(String.format("%02d", countLoop1) + calcItem.get(countLoop2), 1);
-                    } else {
-                        workItemCount.put(String.format("%02d", countLoop1) + calcItem.get(countLoop2), workItemCount.get(String.format("%02d", countLoop1) + calcItem.get(countLoop2)) + 1);
-                    }
-                }
-   End Delete for Simplification */
-
-/* Start Add Simplification */
                 if (calcInfo.get(countLoop2).flag == countLoop1) {
                     if (workItemCount.get(String.format("%02d", countLoop1) + calcInfo.get(countLoop2).item) == null) {
                         workItemCount.put(String.format("%02d", countLoop1) + calcInfo.get(countLoop2).item, 1);
@@ -184,8 +142,6 @@ public class BoxController {
                         workItemCount.put(String.format("%02d", countLoop1) + calcInfo.get(countLoop2).item, workItemCount.get(String.format("%02d", countLoop1) + calcInfo.get(countLoop2).item) + 1);
                     }
                 }
-/* End Add Simplification */
-
             }
             workItem = "";
             for (String key : workItemCount.keySet()) {
