@@ -22,38 +22,23 @@
 </head>
 <body>
 <div class="container">
-    <div class="row">
-        <div class="col">
-            箱No
+    <th:block th:if="${#lists.isEmpty(page.itemBoxList)}">
+        <h2>箱詰めした商品はありません。</h2>
+    </th:block>
+    <th:block th:if="${!#lists.isEmpty(page.itemBoxList)}">
+        <div class="row">
+            <div class="col">
+                箱No
+            </div>
+            <div class="col">
+                商品
+            </div>
         </div>
-        <div class="col">
-            商品
+        <div th:each="itemBox, stat : ${page.itemBoxList}" class="row">
+            <div class="col" th:text="${stat.count}"></div>
+            <div class="col" th:text="${itemBox.items}"></div>
         </div>
-    </div>
-    <div class="row">
-        <div class="col">
-            1
-        </div>
-        <div class="col">
-            商品(大):1, 商品(小):1
-        </div>
-    </div>
-    <div class="row">
-        <div class="col">
-            2
-        </div>
-        <div class="col">
-            商品(中):3, 商品(小):1
-        </div>
-    </div>
-    <div class="row">
-        <div class="col">
-            3
-        </div>
-        <div class="col">
-            商品(中):1, 商品(小):2
-        </div>
-    </div>
+    </th:block>
 </div>
 </body>
 </html>
