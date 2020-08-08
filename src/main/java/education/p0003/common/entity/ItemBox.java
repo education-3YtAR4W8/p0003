@@ -11,5 +11,5 @@ import java.math.BigDecimal;
 public class ItemBox {
     BigDecimal capacity = new BigDecimal(1.00);
     String items = "";
-    boolean isMax = false;
+    boolean isLimit = false;
 }

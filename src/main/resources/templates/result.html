@@ -22,8 +22,11 @@
 </head>
 <body>
 <div class="container">
-    <th:block th:if="${#lists.isEmpty(page.itemBoxList)}">
-        <h2>箱詰めした商品はありません。</h2>
+    <th:block th:if="${!#strings.isEmpty(page.msg)}">
+        <h2 align="center" th:text="${page.msg}"></h2>
+    </th:block>
+    <th:block th:if="${!#strings.isEmpty(page.errMsg)}">
+        <font color="red"><h2 align="center" th:text="${page.errMsg}"></h2></font>
     </th:block>
     <th:block th:if="${!#lists.isEmpty(page.itemBoxList)}">
         <div class="row">

@@ -25,27 +25,36 @@ public class BoxController {
     @Autowired
     ItemDao itemDao;
 
+    /*
+      メンバ変数
+    */
     // リクエストパラメータ格納用のマップ（仮想棚）
     Map<String, Integer> virtualShelf = new TreeMap<>(Comparator.reverseOrder());
     Map<String, Item> itemMap = new HashMap<>();
     int maxItemId = 8;
 
+    /*
+      メッセージ定義
+    */
+    final String MSG_NO_ITEMS = "箱詰めした商品はありません。";
+    final String MSG_INVALID_VALUES = "数値を入力してください。";
+
     @GetMapping(path = "box/input")
     String input(Model model) {
         // item_tblの内容をname順に表示してください。
         InputPage page = new InputPage();
-
         itemMap = itemDao.selectAll()
                 .stream()
                 .collect(Collectors.toMap(Item::getId, it -> it));
-
         page.setItemList(new ArrayList<>(itemMap.values()));
+
         model.addAttribute("page", page);
+
         return "input";
     }
     
     @PostMapping(path = "box/check")
-    String check(@RequestParam("amount[]")Integer[] numbers,
+    String check(@RequestParam("amount[]")String[] numbers,
                  @RequestParam("id[]")String[] ids) {
         // 以下のルールのとおり、箱詰めの計算をしてください。
         // - 1箱にはサイズが1.00になるまで商品を入れられます。
@@ -56,21 +65,31 @@ public class BoxController {
         // POST時にリダイレクトせずにページを表示すると、F5等でページを更新するとPOSTデータを再送信するため、警告ダイアログが表示されます。
         // またCSRF対策で不正なページ遷移のエラーになる可能性もあります。
 
-        for (int i = 0; i < ids.length ; i++) {
-            // キー:商品ID、値:在庫数
-            virtualShelf.put(ids[i], numbers[i]);
+        // セッション情報を初期化
+        // ブラウザバック後、再度計算を実施すると情報が残るため
+        initSession();
+
+        try {
+            for (int i = 0; i < ids.length; i++) {
+                // キー:商品ID、値:在庫数
+                virtualShelf.put(ids[i], Integer.parseInt(numbers[i]));
+            }
+        } catch (NumberFormatException e) {
+            // 数値以外を入力された場合はエラーメッセージ時を設定しリダイレクト
+            boxSession.errMsg = MSG_INVALID_VALUES;
+            return "redirect:/box/result/";
         }
 
-        List<ItemBox> itemBoxList = new ArrayList<>();
         // 最初から在庫がない場合は計算処理を行わない
         if (!isEmptyShelf()) {
 
+            // 返却用リスト
+            List<ItemBox> itemBoxList = new ArrayList<>();
             // サイズが大きい順に計算したいので最大商品IDで初期化
             int itemId = maxItemId;
             int num;
             ItemBox itemBox = null;
             StringBuilder sbForItemName = new StringBuilder();
-            boolean empFlg = false;
 
             //
             // 計算処理
@@ -96,35 +115,35 @@ public class BoxController {
                         // 箱詰め処理呼び出し
                         String itemName = item.getName();
                         packagingItems(itemId, num, itemSize, itemName, itemBox, sbForItemName);
-                        empFlg = isEmptyShelf();
 
+                        if (isEmptyShelf()) {
+
+                            // 箱詰めによりすべての在庫が払い出された場合
+                            itemBoxList.add(itemBox);
+                            break;
+                        }
                     }
                 }
 
-                if (empFlg) {
+                if (itemBox.isLimit()) {
 
-                    // 箱詰めによりすべての在庫が払い出された場合
+                    // 現在の箱が満杯の場合
                     itemBoxList.add(itemBox);
-                    break;
+                    itemId = maxItemId;
+                    itemBox = null;
+                    sbForItemName.delete(0, sbForItemName.length());
 
                 } else {
-                    if (itemBox.isMax()) {
 
-                        // 現在の箱が満杯の場合
-                        itemBoxList.add(itemBox);
-                        itemId = maxItemId;
-                        itemBox = null;
-                        sbForItemName.delete(0, sbForItemName.length());
-
-                    } else {
-                        // 満杯ではない場合
-                        itemId--;
-                    }
+                    // 満杯ではない場合
+                    itemId--;
                 }
             }
-        }
+            boxSession.itemBoxList = itemBoxList;
 
-        boxSession.itemBoxList = itemBoxList;
+        } else {
+            boxSession.msg = MSG_NO_ITEMS;
+        }
         return "redirect:/box/result/";
     }
 
@@ -132,13 +151,25 @@ public class BoxController {
     String result(Model model) {
         ResultPage page = new ResultPage();
         page.setItemBoxList(boxSession.itemBoxList);
+        page.setMsg(boxSession.msg);
+        page.setErrMsg(boxSession.errMsg);
 
         model.addAttribute("page", page);
+
         return "result";
     }
 
     /*
-     箱詰め処理
+      セッション情報初期化
+     */
+    private void initSession() {
+        boxSession.itemBoxList = null;
+        boxSession.msg = "";
+        boxSession.errMsg = "";
+    }
+
+    /*
+      箱詰め処理
      */
     private void packagingItems(int id, int num, BigDecimal size, String name,
                                 ItemBox itemBox, StringBuilder sb){
@@ -159,7 +190,7 @@ public class BoxController {
         // 在庫の更新
         virtualShelf.put(String.valueOf(id), num);
 
-        // 商品内訳を設定
+        // 商品内訳を更新
         if (sb.length() > 0) {
             sb.append(", ");
         }
@@ -168,15 +199,15 @@ public class BoxController {
         sb.append(itemCnt);
         sb.append("個");
 
-        if (isMax(itemBox)) {
+        if (isLimit(itemBox)) {
+            // 箱の容量が限界の場合
             itemBox.setItems(sb.toString());
-            itemBox.setMax(true);
+            itemBox.setLimit(true);
         }
-
     }
 
     /*
-     空棚判定
+      空棚判定
      */
     private boolean isEmptyShelf() {
         int num;
@@ -190,24 +221,22 @@ public class BoxController {
     }
 
     /*
-     満杯判定
+      限界判定
      */
-    private boolean isMax(ItemBox itemBox) {
+    private boolean isLimit(ItemBox itemBox) {
 
         // 残容量より小さい商品のIDを取得
         List<Integer> itemIdList = itemDao.selectIdsBySize(itemBox.getCapacity());
-        boolean maxFlag = true;
         if (itemIdList != null && !itemIdList.isEmpty()) {
             // 残個数を調査
             for (int itemId : itemIdList) {
                 int remainingNum = virtualShelf.get(String.valueOf(itemId));
                 if (remainingNum > 0) {
-                    maxFlag = false;
-                    break;
+                    return false;
                 }
             }
         }
-        return maxFlag;
+        return true;
     }
 
     @Getter
@@ -220,5 +249,7 @@ public class BoxController {
     @Setter
     static public class ResultPage {
         List<ItemBox> itemBoxList;
+        String msg;
+        String errMsg;
     }
 }
