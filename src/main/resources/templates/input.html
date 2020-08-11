@@ -35,37 +35,17 @@
                 個数
             </div>
         </div>
-        <div class="row">
-            <div class="col">
+        <div class="row" th:each="inputMap : ${page.inputMap}">
+            <div class="col" th:text="${inputMap.getKey()}">
                 商品(大)
             </div>
-            <div class="col">
+            <div class="col" th:text="${inputMap.getValue().get(0)}">
                 0.90
             </div>
             <div class="col">
-                <input type="text" name="id[0001]" value="0" />
-            </div>
-        </div>
-        <div class="row">
-            <div class="col">
-                商品(中)
-            </div>
-            <div class="col">
-                0.30
-            </div>
-            <div class="col">
-                <input type="text" name="id[0002]" value="0" />
-            </div>
-        </div>
-        <div class="row">
-            <div class="col">
-                商品(小)
-            </div>
-            <div class="col">
-                0.10
-            </div>
-            <div class="col">
-                <input type="text" name="id[0003]" value="0" />
+                <input type="hidden" name="item" th:value="${inputMap.getKey()}">
+                <input type="hidden" name="size" th:value="${inputMap.getValue().get(0)}">
+                <input type="text" name="inputData" th:id="'id[' + ${inputMap.getValue().get(1)} + ']'" value="1" />
             </div>
         </div>
         <button type="submit" class="btn btn-primary">計算</button>
