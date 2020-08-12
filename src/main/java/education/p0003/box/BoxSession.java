@@ -11,5 +11,15 @@ import java.io.Serializable;
 public class BoxSession implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    Integer temp = 0;
+    public Boolean isInvalidFormatForCount = false;
+    public Boolean isBadRequest = false;
+
+    public void clearErrors() {
+        isInvalidFormatForCount = false;
+        isBadRequest = false;
+    }
+
+    public Boolean hasError() {
+        return isInvalidFormatForCount || isBadRequest;
+    }
 }

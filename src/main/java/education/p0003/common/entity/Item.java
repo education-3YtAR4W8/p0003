@@ -17,7 +17,7 @@ public class Item {
     Integer id;
 
     @Column(name = "name")
-    String name;
+    public String name;
 
     @Column(name = "size")
     BigDecimal size;

@@ -35,37 +35,16 @@
                 個数
             </div>
         </div>
-        <div class="row">
-            <div class="col">
+        <div class="row" th:each="item : ${page.items}">
+            <div class="col" th:text="${item.name}">
                 商品(大)
             </div>
-            <div class="col">
+            <div class="col" th:text="${page.SIZE_FORMATTER.format(item.getSize())}">
                 0.90
             </div>
             <div class="col">
-                <input type="text" name="id[0001]" value="0" />
-            </div>
-        </div>
-        <div class="row">
-            <div class="col">
-                商品(中)
-            </div>
-            <div class="col">
-                0.30
-            </div>
-            <div class="col">
-                <input type="text" name="id[0002]" value="0" />
-            </div>
-        </div>
-        <div class="row">
-            <div class="col">
-                商品(小)
-            </div>
-            <div class="col">
-                0.10
-            </div>
-            <div class="col">
-                <input type="text" name="id[0003]" value="0" />
+                <input type="hidden" name="ids[]" value="1" th:value="${item.getId()}" />
+                <input type="text" name="counts[]" value="0" />
             </div>
         </div>
         <button type="submit" class="btn btn-primary">計算</button>
