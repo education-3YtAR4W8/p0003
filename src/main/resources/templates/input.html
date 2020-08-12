@@ -43,7 +43,7 @@
                 0.90
             </div>
             <div class="col">
-                <input type="text" name="id[0001]" value="0" />
+                <input type="number" min="0" max="9999999" maxlength="7" pattern="\d+" name="bigProduct" value="0" />
             </div>
         </div>
         <div class="row">
@@ -54,7 +54,7 @@
                 0.30
             </div>
             <div class="col">
-                <input type="text" name="id[0002]" value="0" />
+                <input type="number" min="0" max="9999999" pattern="\d+" name="mediumProduct" value="0" />
             </div>
         </div>
         <div class="row">
@@ -65,7 +65,7 @@
                 0.10
             </div>
             <div class="col">
-                <input type="text" name="id[0003]" value="0" />
+                <input type="number" min="0" max="9999999" pattern="\d+" name="smallProduct" value="0" />
             </div>
         </div>
         <button type="submit" class="btn btn-primary">計算</button>

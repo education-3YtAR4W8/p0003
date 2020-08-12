@@ -30,30 +30,15 @@
             商品
         </div>
     </div>
-    <div class="row">
+    <div class="row" th:each="boxInfo : ${boxInfos}">
         <div class="col">
-            1
+            <div th:text="${boxInfo.boxNumber}"/>
         </div>
         <div class="col">
-            商品(大):1, 商品(小):1
-        </div>
-    </div>
-    <div class="row">
-        <div class="col">
-            2
-        </div>
-        <div class="col">
-            商品(中):3, 商品(小):1
+            <p th:text="${boxInfo.boxInfoMessage}"/>
         </div>
     </div>
-    <div class="row">
-        <div class="col">
-            3
-        </div>
-        <div class="col">
-            商品(中):1, 商品(小):2
-        </div>
-    </div>
+
 </div>
 </body>
 </html>
