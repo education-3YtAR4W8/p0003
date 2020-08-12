@@ -1,6 +1,8 @@
 package education.p0003.box;
 
+import education.p0003.common.dao.ItemDao;
 import education.p0003.common.entity.Item;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,12 +17,14 @@ import java.util.List;
 public class BoxController {
 
     @Autowired
+    ItemDao itemDao;
+
+    @Autowired
     BoxSession boxSession;
 
     @GetMapping(path = "box/input")
     String input(Model model) {
-        // item_tblの内容をname順に表示してください。
-        InputPage page = new InputPage();
+        InputPage page = new InputPage(itemDao.selectAllSortedWithName());
         model.addAttribute("page", page);
         return "input";
     }
@@ -50,6 +54,7 @@ public class BoxController {
 
     @Getter
     @Setter
+    @AllArgsConstructor
     static public class InputPage {
         private List<Item> items;
     }
