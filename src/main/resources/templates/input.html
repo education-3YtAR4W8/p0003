@@ -25,49 +25,22 @@
 <form method="post" action="/box/check/">
     <div class="container">
         <div class="row">
-            <div class="col">
+            <div class="col-md-4">
                 商品
             </div>
-            <div class="col">
+            <div class="col-md-4">
                 サイズ
             </div>
-            <div class="col">
+            <div class="col-md-4">
                 個数
             </div>
         </div>
-        <div class="row">
-            <div class="col">
-                商品(大)
-            </div>
-            <div class="col">
-                0.90
-            </div>
-            <div class="col">
-                <input type="text" name="id[0001]" value="0" />
-            </div>
+        <div th:each="item : ${page.items}" class="row">
+            <div th:text="${item.name}" class="col-md-4"></div>
+            <div th:text="${item.size}" class="col-md-4"></div>
+            <input type="text" th:name="${item.id}" value="0" />
         </div>
-        <div class="row">
-            <div class="col">
-                商品(中)
-            </div>
-            <div class="col">
-                0.30
-            </div>
-            <div class="col">
-                <input type="text" name="id[0002]" value="0" />
-            </div>
-        </div>
-        <div class="row">
-            <div class="col">
-                商品(小)
-            </div>
-            <div class="col">
-                0.10
-            </div>
-            <div class="col">
-                <input type="text" name="id[0003]" value="0" />
-            </div>
-        </div>
+
         <button type="submit" class="btn btn-primary">計算</button>
     </div>
 </form>
