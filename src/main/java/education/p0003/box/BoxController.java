@@ -9,12 +9,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Controller
@@ -27,64 +29,69 @@ public class BoxController {
     BoxSession boxSession;
 
     @GetMapping(path = "box/input")
-    String input(Model model) {
-        InputPage page = new InputPage(itemDao.selectAllSortedWithName());
+    public String input(Model model) {
+        InputForm inputForm = Optional.ofNullable(boxSession.inputForm).orElse(new InputForm());
+        InputPage page = new InputPage(itemDao.selectAllSortedWithName(), inputForm);
         model.addAttribute("page", page);
         return "input";
     }
 
-    private void validate(List<String> ids, List<String> counts, Map<Integer, Item> itemMap) {
-        boxSession.clearErrors();
-
-        if (ids.size() != counts.size()) {
-            boxSession.isBadRequest = true;
-        }
-
-        if (counts.stream().anyMatch(it -> !isIntegerOrEmpty(it))) {
-            boxSession.isInvalidFormatForCount = true;
-        }
-
-        if (ids.stream().anyMatch(it -> !isInteger(it))) {
-            boxSession.isBadRequest = true;
-        }
-
-        if (ids.stream().anyMatch(it -> !itemMap.containsKey(it))) {
-            boxSession.isBadRequest = true;
-        }
-    }
-    
     @PostMapping(path = "box/check")
-    String check(@RequestParam("ids") List<String> ids, @RequestParam("counts") List<String> counts) {
-        // 以下のルールのとおり、箱詰めの計算をしてください。
-        // - 1箱にはサイズが1.00になるまで商品を入れられます。
-        // - 出来るだけ箱の個数は少なくなるように詰めてください。
-        //
-        // PRGパターンを想定しています。
-        // 計算結果をセッションに入れてリダイレクトし、リダイレクト先でセッションから取り出すようにしてください。
-        // POST時にリダイレクトせずにページを表示すると、F5等でページを更新するとPOSTデータを再送信するため、警告ダイアログが表示されます。
-        // またCSRF対策で不正なページ遷移のエラーになる可能性もあります。
-        Map<Integer, Item> itemMap = itemDao.selectAllSortedWithName().stream().collect(Collectors.toMap(it->it.getId(), it->it));
+    public String check(@ModelAttribute InputForm inputForm) {
+        boxSession.inputForm = inputForm;
 
-        validate(ids, counts, itemMap);
-        if (boxSession.hasError()) {
+        Map<Integer, Item> itemMap = itemDao.selectAllSortedWithName()
+                .stream()
+                .collect(Collectors.toMap(it -> it.getId(), it -> it));
+
+        inputForm.validate(itemMap);
+        if (inputForm.hasError()) {
             return "redirect:/box/input/";
         }
 
-        
+        List<Box> boxes = new ArrayList<>();
+        List<ItemAndQuantity> itemAndQuantities = convertToItemAndQuantities(
+                inputForm.itemIds,
+                inputForm.itemQuantities,
+                itemMap);
+        for (ItemAndQuantity itemAndQuantity : itemAndQuantities) {
+            for (Box box : boxes) {
+                Integer storedQuantity = box.storeItems(itemAndQuantity);
+                itemAndQuantity.quantity -= storedQuantity;
 
+                if (itemAndQuantity.quantity == 0) {
+                    break;
+                }
+            }
 
+            while (itemAndQuantity.quantity > 0) {
+                Box box = new Box();
+                Integer storedQuantity = box.storeItems(itemAndQuantity);
+                itemAndQuantity.quantity -= storedQuantity;
+                boxes.add(box);
+            }
+        }
 
-
+        boxSession.boxes = boxes;
         return "redirect:/box/result/";
     }
-    
+
     @GetMapping(path = "box/result")
-    String result(Model model) {
-        ResultPage page = new ResultPage();
+    public String result(Model model) {
+        ResultPage page = new ResultPage(boxSession.boxes);
         model.addAttribute("page", page);
 
-        System.out.println(boxSession.temp); // セッションから100を取得
         return "result";
+    }
+
+    private List<ItemAndQuantity> convertToItemAndQuantities(List<String> itemIds, List<String> itemQuantities, Map<Integer, Item> itemMap) {
+        List<ItemAndQuantity> itemAndQuantities = new ArrayList<>();
+        for (Integer i = 0; i < itemIds.size(); i++ ) {
+            Item item = itemMap.get(Integer.parseInt(itemIds.get(i)));
+            ItemAndQuantity itemAndQuantity = new ItemAndQuantity(item, Integer.parseInt(itemQuantities.get(i)));
+            itemAndQuantities.add(itemAndQuantity);
+        }
+        return itemAndQuantities;
     }
 
     @Getter
@@ -92,33 +99,15 @@ public class BoxController {
     @AllArgsConstructor
     static public class InputPage {
         private List<Item> items;
+        private InputForm inputForm;
 
         public static final DecimalFormat SIZE_FORMATTER = new DecimalFormat("0.00");
     }
 
     @Getter
     @Setter
+    @AllArgsConstructor
     static public class ResultPage {
-
-
+        private List<Box> boxes;
     }
-
-    private Boolean isInteger(String value) {
-        if (!value.matches("\\d{1,10}")) {
-            return false;
-        }
-        if (Long.parseLong(value) > Integer.MAX_VALUE) {
-            return false;
-        }
-        return true;
-    }
-
-    private Boolean isIntegerOrEmpty(String value) {
-        if (value == null) {
-            return true;
-        }
-        return isInteger(value);
-    }
-
-
 }
