@@ -26,7 +26,7 @@
     <th:block th:if="${page.inputForm.isBadRequest}">
         不正な要求です。
     </th:block>
-    <th:block th:if="${page.inputForm.isInvalidFormatOfItemQuantities}">
+    <th:block th:if="${page.inputForm.isInvalidFormatOfItemQuantity}">
         個数に不正な入力があります。
     </th:block>
 </div>
@@ -44,7 +44,7 @@
                 個数
             </div>
         </div>
-        <div class="row" th:each="item : ${page.items}">
+        <div class="row" th:each="item, status : ${page.items}">
             <div class="col" th:text="${item.name}">
                 商品(大)
             </div>
@@ -52,8 +52,8 @@
                 0.90
             </div>
             <div class="col">
-                <input type="hidden" name="itemIds[]" value="1" th:value="${item.getId()}" />
-                <input type="text" name="itemQuantities[]" value="0" th:value=""${page.inputForm.getItemQuantity(item.id)} />
+                <input type="hidden" name="rows[0].itemId" th:name="|rows[${status.index}].itemId|" value="1" th:value="${item.getId()}" />
+                <input type="text" name="rows[0].quantity" th:name="|rows[${status.index}].quantity|" value="0" th:value="${page.inputForm.getItemQuantity(item.id.toString())}" />
             </div>
         </div>
         <button type="submit" class="btn btn-primary">計算</button>

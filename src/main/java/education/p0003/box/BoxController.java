@@ -1,5 +1,6 @@
 package education.p0003.box;
 
+import education.p0003.common.Utils;
 import education.p0003.common.dao.ItemDao;
 import education.p0003.common.entity.Item;
 import lombok.AllArgsConstructor;
@@ -11,6 +12,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.thymeleaf.util.StringUtils;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -44,30 +47,39 @@ public class BoxController {
                 .stream()
                 .collect(Collectors.toMap(it -> it.getId(), it -> it));
 
-        inputForm.validate(itemMap);
-        if (inputForm.hasError()) {
+        boxSession.inputForm.validate(itemMap);
+        if (boxSession.inputForm.hasError()) {
             return "redirect:/box/input/";
         }
 
         List<Box> boxes = new ArrayList<>();
-        List<ItemAndQuantity> itemAndQuantities = convertToItemAndQuantities(
-                inputForm.itemIds,
-                inputForm.itemQuantities,
-                itemMap);
-        for (ItemAndQuantity itemAndQuantity : itemAndQuantities) {
-            for (Box box : boxes) {
-                Integer storedQuantity = box.storeItems(itemAndQuantity);
-                itemAndQuantity.quantity -= storedQuantity;
+        List<ItemAndQuantity> inputValidItemAndQuantitiesSortedInDescendingWithSize = inputForm.rows
+                .stream()
+                .map(it -> new ItemAndQuantity(
+                        itemMap.get(Integer.parseInt(it.itemId)),
+                        Utils.isInteger(it.quantity) ? Integer.parseInt(it.quantity) : 0
+                ))
+                .filter(it -> it.quantity > 0)
+                .sorted((itemAndQuantity1, itemAndQuantity2) -> {
+                    return itemAndQuantity2.item.getSize().compareTo(itemAndQuantity1.item.getSize());
+                })
+                .collect(Collectors.toList());
 
-                if (itemAndQuantity.quantity == 0) {
+        for (ItemAndQuantity itemAndQuantity : inputValidItemAndQuantitiesSortedInDescendingWithSize) {
+            Integer quantity = itemAndQuantity.quantity;
+            for (Box box : boxes) {
+                Integer storedQuantity = box.storeItems(itemAndQuantity.item, quantity);
+                quantity -= storedQuantity;
+
+                if (quantity == 0) {
                     break;
                 }
             }
 
-            while (itemAndQuantity.quantity > 0) {
+            while (quantity > 0) {
                 Box box = new Box();
-                Integer storedQuantity = box.storeItems(itemAndQuantity);
-                itemAndQuantity.quantity -= storedQuantity;
+                Integer storedQuantity = box.storeItems(itemAndQuantity.item, quantity);
+                quantity -= storedQuantity;
                 boxes.add(box);
             }
         }
@@ -82,16 +94,6 @@ public class BoxController {
         model.addAttribute("page", page);
 
         return "result";
-    }
-
-    private List<ItemAndQuantity> convertToItemAndQuantities(List<String> itemIds, List<String> itemQuantities, Map<Integer, Item> itemMap) {
-        List<ItemAndQuantity> itemAndQuantities = new ArrayList<>();
-        for (Integer i = 0; i < itemIds.size(); i++ ) {
-            Item item = itemMap.get(Integer.parseInt(itemIds.get(i)));
-            ItemAndQuantity itemAndQuantity = new ItemAndQuantity(item, Integer.parseInt(itemQuantities.get(i)));
-            itemAndQuantities.add(itemAndQuantity);
-        }
-        return itemAndQuantities;
     }
 
     @Getter

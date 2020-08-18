@@ -1,28 +1,27 @@
 package education.p0003.box;
 
+import education.p0003.common.Utils;
 import education.p0003.common.entity.Item;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@Getter
-@Setter
+@Data
 public class InputForm implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    List<String> itemIds;
-    List<String> itemQuantities;
+    public List<InputRow> rows = new ArrayList<>();
 
-    Boolean isBadRequest = false;
-    Boolean isInvalidFormatOfItemQuantities = false;
+    public Boolean isBadRequest = false;
+    public Boolean isInvalidFormatOfItemQuantity = false;
 
-    public String getItemQuantity(Integer itemId) {
-        for (Integer i = 0; i < itemIds.size(); i++) {
-            if (itemIds.get(i).equals(itemId.toString())) {
-                return i < itemQuantities.size() ? itemQuantities.get(i) : "0";
+    public String getItemQuantity(String itemId) {
+        for (InputRow inputRow : rows) {
+            if (inputRow.itemId.equals(itemId)) {
+                return inputRow.quantity;
             }
         }
         return "0";
@@ -31,46 +30,34 @@ public class InputForm implements Serializable {
     public void validate(Map<Integer, Item> itemMap) {
         clearErrors();
 
-        if (itemIds.size() != itemQuantities.size()) {
+        if (rows.stream().anyMatch(it -> !Utils.isIntegerOrEmpty(it.quantity))) {
+            isInvalidFormatOfItemQuantity = true;
+        }
+
+        if (rows.stream().anyMatch(it -> !Utils.isInteger(it.itemId))) {
             isBadRequest = true;
         }
 
-        if (itemQuantities.stream().anyMatch(it -> !isIntegerOrEmpty(it))) {
-            isInvalidFormatOfItemQuantities = true;
-        }
-
-        if (itemIds.stream().anyMatch(it -> !isInteger(it))) {
-            isBadRequest = true;
-        }
-
-        if (itemIds.stream().anyMatch(it -> !itemMap.containsKey(it))) {
+        if (rows.stream().anyMatch(it -> !itemMap.containsKey(Integer.parseInt(it.itemId)))) {
             isBadRequest = true;
         }
     }
 
     private void clearErrors() {
         isBadRequest = false;
-        isInvalidFormatOfItemQuantities = false;
+        isInvalidFormatOfItemQuantity = false;
     }
 
     public Boolean hasError() {
-        return isBadRequest || isInvalidFormatOfItemQuantities;
+        return isBadRequest || isInvalidFormatOfItemQuantity;
     }
 
-    private Boolean isInteger(String value) {
-        if (!value.matches("\\d{1,10}")) {
-            return false;
-        }
-        if (Long.parseLong(value) > Integer.MAX_VALUE) {
-            return false;
-        }
-        return true;
+    @Data
+    public static class InputRow implements Serializable {
+        private static final long serialVersionUID = 1L;
+
+        public String itemId;
+        public String quantity;
     }
 
-    private Boolean isIntegerOrEmpty(String value) {
-        if (value == null) {
-            return true;
-        }
-        return isInteger(value);
-    }
 }

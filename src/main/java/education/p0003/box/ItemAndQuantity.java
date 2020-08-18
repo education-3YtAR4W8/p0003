@@ -2,8 +2,6 @@ package education.p0003.box;
 
 import education.p0003.common.entity.Item;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.io.Serializable;
 
