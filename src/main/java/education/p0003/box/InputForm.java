@@ -20,7 +20,7 @@ public class InputForm implements Serializable {
 
     public String getItemQuantity(String itemId) {
         for (InputRow inputRow : rows) {
-            if (inputRow.itemId.equals(itemId)) {
+            if (itemId.equals(inputRow.itemId)) {
                 return inputRow.quantity;
             }
         }
@@ -36,9 +36,7 @@ public class InputForm implements Serializable {
 
         if (rows.stream().anyMatch(it -> !Utils.isInteger(it.itemId))) {
             isBadRequest = true;
-        }
-
-        if (rows.stream().anyMatch(it -> !itemMap.containsKey(Integer.parseInt(it.itemId)))) {
+        } else if (rows.stream().anyMatch(it -> !itemMap.containsKey(Integer.parseInt(it.itemId)))) {
             isBadRequest = true;
         }
     }

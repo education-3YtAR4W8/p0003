@@ -22,17 +22,17 @@
 </head>
 <body>
 
-<div class="alert alert-danger" role="alert" th:if="${page.inputForm.hasError()}">
-    <th:block th:if="${page.inputForm.isBadRequest}">
-        不正な要求です。
-    </th:block>
-    <th:block th:if="${page.inputForm.isInvalidFormatOfItemQuantity}">
-        個数に不正な入力があります。
-    </th:block>
-</div>
+<div class="container">
+    <div class="alert alert-danger" role="alert" th:if="${page.inputForm.hasError()}">
+        <th:block th:if="${page.inputForm.isBadRequest}">
+            不正な要求です。<br/>
+        </th:block>
+        <th:block th:if="${page.inputForm.isInvalidFormatOfItemQuantity}">
+            個数に不正な入力があります。<br/>
+        </th:block>
+    </div>
 
-<form method="post" action="/box/check/">
-    <div class="container">
+    <form method="post" action="/box/check/">
         <div class="row">
             <div class="col">
                 商品
@@ -52,13 +52,15 @@
                 0.90
             </div>
             <div class="col">
-                <input type="hidden" name="rows[0].itemId" th:name="|rows[${status.index}].itemId|" value="1" th:value="${item.getId()}" />
-                <input type="text" name="rows[0].quantity" th:name="|rows[${status.index}].quantity|" value="0" th:value="${page.inputForm.getItemQuantity(item.id.toString())}" />
+                <input type="hidden" name="rows[0].itemId" th:name="|rows[${status.index}].itemId|" value="1"
+                       th:value="${item.getId()}"/>
+                <input type="text" name="rows[0].quantity" th:name="|rows[${status.index}].quantity|" value="0"
+                       th:value="${page.inputForm.getItemQuantity(item.id.toString())}"/>
             </div>
         </div>
         <button type="submit" class="btn btn-primary">計算</button>
-    </div>
-</form>
+    </form>
+</div>
 
 </body>
 </html>
