@@ -30,28 +30,12 @@
             商品
         </div>
     </div>
-    <div class="row">
-        <div class="col">
+    <div class="row" th:each="box, status : ${page.boxes}">
+        <div class="col" th:text="${status.count}">
             1
         </div>
-        <div class="col">
+        <div class="col" th:text="${box.getItemAndQuantitiesText()}">
             商品(大):1, 商品(小):1
-        </div>
-    </div>
-    <div class="row">
-        <div class="col">
-            2
-        </div>
-        <div class="col">
-            商品(中):3, 商品(小):1
-        </div>
-    </div>
-    <div class="row">
-        <div class="col">
-            3
-        </div>
-        <div class="col">
-            商品(中):1, 商品(小):2
         </div>
     </div>
 </div>
